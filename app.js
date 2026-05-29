@@ -9,12 +9,12 @@ async function loadDashboard() {
 
         const summary = result.data.summary;
 
-        document.getElementById('result').innerHTML = `
-            <h2>สรุปข้อมูล</h2>
-            <p>รายรับ: ${summary.totalIncome} บาท</p>
-            <p>รายจ่าย: ${summary.totalExpense} บาท</p>
-            <p>คงเหลือ: ${summary.netBalance} บาท</p>
-        `;
+        document.getElementById("dashboard").innerHTML = `
+  <h2>สรุปข้อมูล</h2>
+  <p>รายรับ: ${data.income.toFixed(2)} บาท</p>
+  <p>รายจ่าย: ${data.expense.toFixed(2)} บาท</p>
+  <p>คงเหลือ: ${data.balance.toFixed(2)} บาท</p>
+`;
 
     } catch (error) {
         console.error('โหลดข้อมูลไม่สำเร็จ', error);
