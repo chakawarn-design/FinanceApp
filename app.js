@@ -11,9 +11,9 @@ async function loadDashboard() {
 
         document.getElementById("dashboard").innerHTML = `
   <h2>สรุปข้อมูล</h2>
-  <p>รายรับ: ${data.income.toFixed(2)} บาท</p>
-  <p>รายจ่าย: ${data.expense.toFixed(2)} บาท</p>
-  <p>คงเหลือ: ${data.balance.toFixed(2)} บาท</p>
+  <p>รายรับ: ${summary.totalIncome.toFixed(2)} บาท</p>
+  <p>รายจ่าย: ${summary.totalExpense.toFixed(2)} บาท</p>
+  <p>คงเหลือ: ${summary.netBalance.toFixed(2)} บาท</p>
 `;
 
     } catch (error) {
