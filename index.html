@@ -1,24 +1,924 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายรับรายจ่าย</title>
 
-  <title>ระบบรายรับรายจ่าย</title>
-  <div id="dashboard"></div>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
 
-  <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --income-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --expense-gradient: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+            --edit-gradient: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            --delete-gradient: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            --secondary-gradient: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            --bg-light: #f5f5f5;
+            --bg-white: #ffffff;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #e1e1e1;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Kanit', sans-serif;overflow: hidden;background: #dcdcdc; }
+        .container { max-width: 480px;
+    margin: 0 auto;
 
-  <meta name="theme-color" content="#000000">
+    background-image: url('https://lh3.googleusercontent.com/d/1waTPyTxJWylSyHDvc24TIWm2whc_AvLv');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 
+    position: relative;
+
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);color: white;padding: 30px 20px;text-align: center;border-bottom-left-radius: 30px;border-bottom-right-radius: 30px;box-shadow: 0 4px 20px rgba(79,70,229,0.3); }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .content { flex: 1;overflow-y: auto;padding: 20px;padding-bottom: 120px;background-color: rgba(255,255,255,0.20); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-dark); font-weight: 500; }
+        .form-group input, .form-group select { width: 100%;padding: 14px;border: 2px solid #e2e8f0;border-radius: 14px;font-size: 16px;background: white;transition: all 0.25s ease; }
+        .form-group input:focus, .form-group select:focus { outline: none;border-color: #6366f1;box-shadow: 0 0 0 4px rgba(99,102,241,0.15); }
+        .type-toggle { display: flex; background-color: #f0f0f0; border-radius: 8px; overflow: hidden; }
+        .type-toggle input[type="radio"] { display: none; }
+        .type-toggle label { flex: 1; padding: 12px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 0; }
+        .type-toggle input#income:checked + label { background: var(--income-gradient); color: var(--bg-white); }
+        .type-toggle input#expense:checked + label { background: var(--expense-gradient); color: var(--bg-white); }
+        .btn { width: 100%;padding: 14px;background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);color: white;border: none;border-radius: 14px;font-size: 16px;font-weight: 600;cursor: pointer;transition: all 0.25s ease;box-shadow: 0 4px 12px rgba(99,102,241,0.3);}
+        .btn:hover {transform: translateY(-2px);box-shadow: 0 8px 20px rgba(99,102,241,0.4); }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-sm { padding: 8px 12px; font-size: 14px; margin: 0 5px; }
+        .btn-edit { background: var(--edit-gradient); }
+        .btn-delete { background: var(--delete-gradient); }
+        .summary-cards { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 30px; }
+        .summary-card { padding: 20px;border-radius: 20px;text-align: center;color: var(--bg-white);backdrop-filter: blur(12px);-webkit-backdrop-filter: blur(12px);box-shadow: 0 8px 30px rgba(0,0,0,0.15);border: 1px solid rgba(255,255,255,0.2);transition: all 0.3s ease;}
+        .summary-card:hover {transform: translateY(-4px); }
+        .summary-card.income { background: var(--income-gradient); }
+        .summary-card.expense { background: var(--expense-gradient); }
+        .summary-card.balance { background: var(--primary-gradient); }
+        .summary-card h3 { font-size: 16px; margin-bottom: 10px; opacity: 0.9; }
+        .summary-card .amount { font-size: 28px; font-weight: bold; }
+        .filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .charts-section { background-color: var(--bg-white); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .chart-container, .chart-container-full { position: relative;max-width: 480px;margin: 0 auto; }
+        .chart-container h4, .chart-container-full h4 { margin-bottom: 15px; color: var(--text-dark); font-weight: 500; }
+        .transaction-list { background-color: var(--bg-white); border-radius: 8px; overflow: hidden; }
+        .transaction-item, .category-list-item { padding: 16px;margin-bottom: 12px;border-radius: 18px;background: white;box-shadow: 0 4px 14px rgba(0,0,0,0.05);display: flex;justify-content: space-between;align-items: center;border: none; }
+        .transaction-details { flex-grow: 1; }
+        .transaction-details h4 { color: var(--text-dark); margin-bottom: 5px; }
+        .transaction-details p { color: var(--text-light); font-size: 14px; }
+        .transaction-amount { font-weight: bold; font-size: 16px; }
+        .transaction-amount.income { color: #11998e; }
+        .transaction-amount.expense { color: #fc4a1a; }
+        .transaction-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-delete-icon { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--text-light); padding: 5px; border-radius: 50%; transition: background-color 0.2s, color 0.2s; }
+        .btn-delete-icon:hover { background-color: #f8d7da; color: #721c24; }
+        .bottom-nav { position: sticky;bottom: 0;left: 0;width: 100%;background-color: var(--bg-white);border-top: 1px solid var(--border-color);display: flex;box-shadow: 0 -2px 10px rgba(0,0,0,0.1);z-index: 999; }
+        .nav-item { flex: 1; padding: 15px 10px; text-align: center; cursor: pointer; transition: background-color 0.3s; border: none; background: none; color: var(--text-light); }
+        .nav-item.active { color: white;background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);border-radius: 16px; }
+        .nav-icon { font-size: 20px; margin-bottom: 5px; }
+        .nav-text { font-size: 12px; }
+        .loading { text-align: center; padding: 20px; color: var(--text-light); }
+        .add-project-form, .add-category-form { display: none; background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .btn-secondary { background: var(--secondary-gradient); margin-bottom: 10px; }
+        .category-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; background-color: #f0f0f0; }
+        .category-tab-btn { flex: 1; padding: 12px; text-align: center; cursor: pointer; background: none; border: none; font-size: 16px; font-family: 'Kanit', sans-serif; color: var(--text-dark); transition: all 0.3s; }
+        .category-tab-btn.active { color: var(--bg-white); }
+        .category-tab-btn#income-cat-btn.active { background: var(--income-gradient); }
+        .category-tab-btn#expense-cat-btn.active { background: var(--expense-gradient); }
+        .hidden { display: none; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-center { text-align: center; }
+
+        /* Chart Tooltip Styles */
+        #chart-tooltip {
+            position: fixed;
+            display: none;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: pre-wrap;
+            transition: opacity 0.2s;
+            opacity: 0;
+            transform: translate(-50%, -110%); /* Position above the cursor */
+        }
+        .pie-chart-slice {
+            transition: opacity 0.2s ease-out;
+            cursor: pointer;
+        }
+        .pie-chart-slice:hover {
+            opacity: 0.85;
+        }
+
+        @media (max-width: 768px) { .filters { grid-template-columns: 1fr; } .charts-row { grid-template-columns: 1fr; } }
+        .tab-content.active {animation: fadeIn 0.35s ease;}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div id="chart-tooltip"></div>
 
-  <h1>ระบบรายรับรายจ่าย</h1>
+        <div class="header">
+            <h1>💰 รายรับ-รายจ่าย</h1>
+            <p>  ฉันจะมีวินัยทางการเงิน</p>
+        </div>
 
-  <script src="app.js"></script>
+        <div class="content">
+            <!-- Record Tab -->
+            <div class="tab-content active" id="record-tab">
+                <h2 class="mb-20">📝 บันทึกรายการ</h2>
+                <form id="transaction-form">
+                    <div class="form-group">
+                        <label>ประเภท</label>
+                        <div class="type-toggle">
+                            <input type="radio" id="income" name="type" value="รายรับ" checked>
+                            <label for="income">💰 รายรับ</label>
+                            <input type="radio" id="expense" name="type" value="รายจ่าย">
+                            <label for="expense">💸 รายจ่าย</label>
+                        </div>
+                    </div>
+                    <div class="form-group"><label for="date">วันที่</label><input type="date" id="date" name="date" required></div>
+                    <div class="form-group"><label for="item">รายการ/จำนวนไมล์</label><input type="text" id="item" name="item" placeholder="ระบุรายการ..." required></div>
+                    <div class="form-group"><label for="category">หมวดหมู่</label><select id="category" name="category" required><option value="">-- เลือกหมวดหมู่ --</option></select></div>
+                    <div class="form-group"><label for="amount">จำนวนเงิน (บาท)</label><input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required></div>
+                    <div class="form-group"><label for="project">ผู้จ้าง</label><select id="project" name="project"><option value="">-- ไม่ระบุผู้จ้าง --</option></select></div>
+                    <button type="submit" class="btn">💾 บันทึก</button>
+                </form>
+                <div class="recent-transactions-container" style="margin-top: 30px;">
+                    <h3 id="recent-list-title" style="margin-bottom: 15px; font-size: 18px;"></h3>
+                    <div id="recent-transactions-list" class="transaction-list"></div>
+                    <div class="loading" id="recent-loading" style="display: none;">🔄 กำลังโหลด...</div>
+                </div>
+            </div>
 
+            <!-- Dashboard Tab -->
+            <div class="tab-content" id="dashboard-tab">
+                <h2 class="mb-20">📊 สรุปภาพรวม</h2>
+                <div class="filters">
+                    <div class="form-group"><label for="filter-year">ปี</label><select id="filter-year"><option value="">ทุกปี</option></select></div>
+                    <div class="form-group"><label for="filter-month">เดือน</label><select id="filter-month"><option value="">ทุกเดือน</option><option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option><option value="3">มีนาคม</option><option value="4">เมษายน</option><option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option><option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option><option value="9">กันยายน</option><option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option></select></div>
+                    <div class="form-group"><label for="filter-project">โปรเจกต์</label><select id="filter-project"><option value="">ทุกโปรเจกต์</option></select></div>
+
+                    <div class="form-group">
+                    <label for="filter-date">สรุปรายวัน</label>
+                    <input type="date" id="filter-date">
+                    </div>
+                </div>
+                <button type="button" class="btn" onclick="loadDashboardData()" style="margin-bottom: 20px; background: var(--income-gradient);">🔄 โหลดข้อมูล</button>
+                <div class="summary-cards">
+                    <div class="summary-card income"><h3>💰 รายรับรวม</h3><div class="amount" id="total-income">฿0</div></div>
+                    <div class="summary-card expense"><h3>💸 รายจ่ายรวม</h3><div class="amount" id="total-expense">฿0</div></div>
+                    <div class="summary-card balance"><h3>💎 คงเหลือสุทธิ</h3><div class="amount" id="net-balance">฿0</div></div>
+                    <div class="summary-card income"><h3>🚗 จำนวนไมล์รวม</h3><div class="amount" id="total-mile">0 อัน 0฿</div></div>
+                </div>
+                <div class="charts-section" style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 20px; text-align: center; color: var(--text-dark);">📊 กราฟสรุปข้อมูล</h3>
+                    <div class="charts-row">
+                        <div class="chart-container"><h4>รายรับตามหมวดหมู่</h4><div id="incomeChartDiv" style="height: 150px; display: flex; align-items: center; justify-content: center; color: var(--text-light);"></div></div>
+                        <div class="chart-container"><h4>รายจ่ายตามหมวดหมู่</h4><div id="expenseChartDiv" style="height: 150px; display: flex; align-items: center; justify-content: center; color: var(--text-light);"></div></div>
+                    </div>
+                    <div class="chart-container-full"><h4>รายรับ-รายจ่ายรายเดือน</h4><div id="monthlyChartDiv" style="height: 250px; display: flex; align-items: center; justify-content: center; color: var(--text-light);"></div></div>
+                </div>
+                <div class="loading" id="dashboard-loading" style="display: none;">🔄 กำลังโหลด...</div>
+                <div class="transaction-list" id="dashboard-transactions"></div>
+            </div>
+
+            <!-- Projects Tab -->
+            <div class="tab-content" id="projects-tab">
+                <h2 class="mb-20">🎯 ผู้จ้าง</h2>
+                <div class="project-actions"><button type="button" class="btn btn-secondary" onclick="toggleAddProjectForm()">➕ เพิ่มผู้จ้างใหม่</button>
+                    <div class="add-project-form" id="add-project-form">
+                        <div class="form-group"><label for="new-project-name">ผู้จ้างใหม่</label><input type="text" id="new-project-name" placeholder="ระบุชื่อโปรเจกต์..."></div>
+                        <button type="button" class="btn" onclick="addNewProject()">เพิ่มผู้จ้าง</button>
+                    </div>
+                </div>
+                <div class="form-group"><label for="project-selector">เลือกผู้จ้าง</label><select id="project-selector"><option value="">-- เลือกผู้จ้าง --</option></select></div>
+                <div id="project-summary" class="hidden">
+                    <div class="summary-cards">
+                        <div class="summary-card income"><h3>💰 รายรับโปรเจกต์</h3><div class="amount" id="project-income">฿0</div></div>
+                        <div class="summary-card expense"><h3>💸 จำนวนรวม</h3><div class="amount" id="project-expense">฿0</div></div>
+                        <div class="summary-card balance"><h3>📈 รายได้รวม</h3><div class="amount" id="project-profit">฿0</div></div>
+                    </div>
+                    <div class="loading" id="project-loading" style="display: none;">🔄 กำลังโหลด...</div>
+                    <div class="transaction-list" id="project-transactions"></div>
+                </div>
+            </div>
+
+            <!-- Category Tab -->
+            <div class="tab-content" id="category-tab">
+                <h2 class="mb-20">📂 จัดการหมวดหมู่</h2>
+                <div class="category-tabs">
+                    <button id="income-cat-btn" class="category-tab-btn active" onclick="switchCategoryView('รายรับ')">💰 รายรับ</button>
+                    <button id="expense-cat-btn" class="category-tab-btn" onclick="switchCategoryView('รายจ่าย')">💸 รายจ่าย</button>
+                </div>
+                <div class="project-actions">
+                    <button type="button" class="btn btn-secondary" onclick="toggleAddCategoryForm()">➕ เพิ่มหมวดหมู่ใหม่</button>
+                    <div class="add-category-form" id="add-category-form">
+                        <input type="hidden" id="edit-category-old-name" value="">
+                        <div class="form-group">
+                            <label for="new-category-name">ชื่อหมวดหมู่</label>
+                            <input type="text" id="new-category-name" placeholder="ระบุชื่อหมวดหมู่...">
+                        </div>
+                        <button type="button" class="btn" onclick="saveCategory()">บันทึกหมวดหมู่</button>
+                    </div>
+                </div>
+                <div class="loading" id="category-loading" style="display: none;">🔄 กำลังโหลด...</div>
+                <div id="category-list" class="transaction-list"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('record')"><div class="nav-icon">📝</div><div class="nav-text">บันทึก</div></button>
+            <button class="nav-item" onclick="switchTab('dashboard')"><div class="nav-icon">📊</div><div class="nav-text">สรุป</div></button>
+            <button class="nav-item" onclick="switchTab('projects')"><div class="nav-icon">🎯</div><div class="nav-text">ผู้จ้าง</div></button>
+            <button class="nav-item" onclick="switchTab('category')"><div class="nav-icon">📂</div><div class="nav-text">หมวดหมู่</div></button>
+        </div>
+    </div>
+
+    <script>
+        // --- Global variables ---
+        let allProjects = [];
+        let incomeCategories = [];
+        let expenseCategories = [];
+        let currentTab = 'record';
+        let currentCategoryView = 'รายรับ';
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        async function initializeApp() {
+            await waitForLibraries();
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('filter-date').value = new Date().toISOString().split('T')[0];
+            initializeYearFilter();
+
+            await Promise.all([loadProjects(), loadCategories()]);
+
+            setupEventListeners();
+            displayRecentTransactions('รายรับ');
+        }
+
+        function waitForLibraries() {
+            return new Promise((resolve) => {
+                const check = () => (typeof Swal !== 'undefined') ? resolve() : setTimeout(check, 100);
+                check();
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('transaction-form').addEventListener('submit', handleFormSubmit);
+            document.getElementById('filter-year').addEventListener('change', loadDashboardData);
+            document.getElementById('filter-month').addEventListener('change', loadDashboardData);
+            document.getElementById('filter-date').addEventListener('change', loadDashboardData);
+            document.getElementById('filter-project').addEventListener('change', loadDashboardData);
+            document.getElementById('project-selector').addEventListener('change', handleProjectSelection);
+
+            document.querySelectorAll('input[name="type"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    updateCategoryDropdown(e.target.value);
+                    displayRecentTransactions(e.target.value);
+                });
+            });
+        }
+
+        function initializeYearFilter() {
+            const yearSelect = document.getElementById('filter-year');
+            // เริ่มปี ค.ศ. 2026
+            const startYear = 2026;
+            // แสดงไปอีก 20 ปี
+            const endYear = startYear + 20;
+         for (let y = startYear; y <= endYear; y++) {
+            const option = document.createElement('option');
+            option.value = y;
+           // แสดงเป็น พ.ศ.
+            option.textContent = y + 543;
+            yearSelect.appendChild(option);
+            }
+        }
+
+        // --- Tab Switching ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.currentTarget.classList.add('active');
+            currentTab = tabName;
+
+            if (tabName === 'dashboard') loadDashboardData();
+            else if (tabName === 'projects') loadProjects();
+            else if (tabName === 'category') displayCategories(currentCategoryView);
+        }
+
+        // --- Google Apps Script Communication ---
+        function runGAS(functionName, ...args) {
+            return new Promise((resolve, reject) => {
+                if (typeof google === 'undefined' || !google.script || !google.script.run) {
+                    return reject(new Error('Google Apps Script is not loaded.'));
+                }
+                google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[functionName](...args);
+            });
+        }
+
+        // --- Transaction & Project Functions ---
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                type: form.type.value, date: form.date.value, item: form.item.value,
+                category: form.category.value, amount: form.amount.value,
+                project: form.project.value
+            };
+
+            if (!data.date || !data.item || !data.category || !data.amount) {
+                Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบ' });
+                return;
+            }
+
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const result = await runGAS('saveTransaction', data);
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', timer: 1500, showConfirmButton: false });
+                    form.reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    document.getElementById('income').checked = true;
+                    updateCategoryDropdown('รายรับ');
+                    displayRecentTransactions(data.type);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: result.message });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.toString() });
+            }
+        }
+
+        function deleteTransaction(rowIndex) {
+            Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังลบ...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading() }
+                    });
+
+                    try {
+                        const res = await runGAS('deleteTransactionByRow', rowIndex);
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ลบสำเร็จ!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            const currentType = document.querySelector('input[name="type"]:checked').value;
+                            displayRecentTransactions(currentType);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: res.message });
+                        }
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.toString() });
+                    }
+                }
+            });
+        }
+
+        async function loadProjects() {
+            try {
+                const result = await runGAS('getProjects');
+                if (result.success) {
+                    allProjects = result.data;
+                    updateProjectDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        function updateProjectDropdowns() {
+            const selects = ['project', 'project-selector', 'filter-project'];
+            const defaultOptions = ['-- ไม่ระบุผู้จ้าง --', '-- เลือกผู้จ้าง --', 'ผู้จ้างทุกคน'];
+            selects.forEach((id, index) => {
+                const selectEl = document.getElementById(id);
+                selectEl.innerHTML = `<option value="">${defaultOptions[index]}</option>`;
+                allProjects.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p; option.textContent = p;
+                    selectEl.appendChild(option);
+                });
+            });
+        }
+
+        async function loadDashboardData() {
+            if (currentTab !== 'dashboard') return;
+            const loadingEl = document.getElementById('dashboard-loading');
+            loadingEl.style.display = 'block';
+            document.getElementById('dashboard-transactions').innerHTML = '';
+
+            const year = document.getElementById('filter-year').value;
+            const month = document.getElementById('filter-month').value;
+            const project = document.getElementById('filter-project').value;
+            const selectedDate = document.getElementById('filter-date').value;
+
+            try {
+                const result = await runGAS('getFilteredDashboard', year, month, project, selectedDate);
+                if (result.success && result.data) {
+                    updateSummaryCards(result.data.summary);
+                    displayTransactions(result.data.transactions, 'dashboard-transactions');
+                    createCharts(result.data.transactions, year || new Date().getFullYear());
+                } else {
+                    updateSummaryCards({ totalIncome: 0, totalExpense: 0, netBalance: 0 });
+                    displayTransactions([], 'dashboard-transactions');
+                    createCharts([], year || new Date().getFullYear());
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                Swal.fire({icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถโหลดข้อมูลสรุปได้'});
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        function updateSummaryCards(summary, prefix = '') {
+            const incomeId = prefix ? `${prefix}-income` : 'total-income';
+            const expenseId = prefix ? `${prefix}-expense` : 'total-expense';
+            const balanceId = prefix ? `${prefix}-profit` : 'net-balance';
+            const mileId = prefix ? `${prefix}-mile` : 'total-mile';
+
+            document.getElementById(incomeId).textContent = formatCurrency(summary.totalIncome || 0);
+            document.getElementById(expenseId).textContent = formatCurrency(summary.totalExpense || 0);
+
+            const balanceEl = document.getElementById(balanceId);
+            if (balanceEl) {
+                const balance = summary.netBalance || 0;
+                balanceEl.textContent = formatCurrency(balance);
+                const summaryCard = balanceEl.closest('.summary-card');
+                if (summaryCard) {
+                    summaryCard.style.color = balance >= 0 ? 'white' : '#ffdddd';
+                }
+            }
+            const mileEl = document.getElementById(mileId);
+            if (mileEl) {
+            const miles = Number(summary.totalMiles || 0);
+            const totalMoney = miles * 400;mileEl.innerHTML = `${miles.toLocaleString('th-TH')} อัน
+        <br>
+        <span style="font-size:18px;">
+            (${formatCurrency(totalMoney)})
+        </span>
+    `;
+}
+        }
+
+        function displayTransactions(transactions, containerId) {
+            const container = document.getElementById(containerId);
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="text-center" style="padding: 40px; color: #666;">ไม่มีข้อมูลรายการ</div>';
+                return;
+            }
+            container.innerHTML = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).map(t => {
+                const isIncome = t.type === 'รายรับ';
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-details">
+                            <h4>${t.item || 'N/A'}</h4>
+                            <p>${t.category || 'N/A'} • ${new Date(t.date).toLocaleDateString('th-TH')}</p>
+                            ${t.project ? `<p>📁 ${t.project}</p>` : ''}
+                        </div>
+                        <div class="transaction-actions">
+                            <div class="transaction-amount ${isIncome ? 'income' : 'expense'}">
+                                ${isIncome ? '+' : '-'}${formatCurrency(Math.abs(t.amount || 0))}
+                            </div>
+                            ${containerId === 'recent-transactions-list' ?
+                                `<button class="btn-delete-icon" title="ลบรายการนี้" onclick="deleteTransaction(${t.rowIndex})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>` : ''
+                            }
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function displayRecentTransactions(type) {
+            const listContainer = document.getElementById('recent-transactions-list');
+            const titleEl = document.getElementById('recent-list-title');
+            const loadingEl = document.getElementById('recent-loading');
+
+            titleEl.textContent = `รายการ${type}ล่าสุด 20 รายการ`;
+            listContainer.innerHTML = '';
+            loadingEl.style.display = 'block';
+
+            try {
+                const result = await runGAS('getSimpleDashboard');
+                if (result.success && result.data.transactions) {
+                    const recent = result.data.transactions
+                        .filter(t => t.type === type)
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .slice(0, 20);
+                    displayTransactions(recent, 'recent-transactions-list');
+                } else {
+                    listContainer.innerHTML = '<div class="text-center" style="padding: 40px; color: #666;">ไม่พบข้อมูล</div>';
+                }
+            } catch (error) {
+                listContainer.innerHTML = '<div class="text-center" style="padding: 40px; color: #666;">โหลดข้อมูลล้มเหลว</div>';
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        async function handleProjectSelection(event) {
+            const projectName = event.target.value;
+            const summaryDiv = document.getElementById('project-summary');
+            if (!projectName) {
+                summaryDiv.classList.add('hidden');
+                return;
+            }
+
+            summaryDiv.classList.remove('hidden');
+            document.getElementById('project-loading').style.display = 'block';
+            document.getElementById('project-transactions').innerHTML = '';
+
+            try {
+                const result = await runGAS('getProjectSummary', projectName);
+                if (result.success) {
+                    updateSummaryCards(result.data.summary, 'project');
+                    displayTransactions(result.data.transactions, 'project-transactions');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'โหลดข้อมูลผู้จ้างล้มเหลว', text: result.message });
+                }
+            } catch (error) {
+                 Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถโหลดข้อมูลผู้จ้างได้' });
+            } finally {
+                document.getElementById('project-loading').style.display = 'none';
+            }
+        }
+
+        function toggleAddProjectForm() {
+            const form = document.getElementById('add-project-form');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            if (form.style.display === 'block') document.getElementById('new-project-name').focus();
+        }
+
+        async function addNewProject() {
+            const projectName = document.getElementById('new-project-name').value.trim();
+            if (!projectName) {
+                Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อผู้จ้าง' });
+                return;
+            }
+            Swal.fire({ title: 'กำลังเพิ่มผู้จ้าง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const result = await runGAS('addProject', projectName);
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'เพิ่มผู้จ้างสำเร็จ!', timer: 1500, showConfirmButton: false });
+                    toggleAddProjectForm();
+                    await loadProjects();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'เพิ่มผู้จ้างไม่สำเร็จ', text: result.message });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.toString() });
+            }
+        }
+
+        // =============================================
+        // =========== Category Management (No ID) =====
+        // =============================================
+        async function loadCategories() {
+            try {
+                const result = await runGAS('getCategories');
+                if (result.success && Array.isArray(result.data)) {
+                    incomeCategories = result.data.filter(cat => cat.type === 'รายรับ');
+                    expenseCategories = result.data.filter(cat => cat.type === 'รายจ่าย');
+                    const selectedType = document.querySelector('input[name="type"]:checked').value;
+                    updateCategoryDropdown(selectedType);
+                    if (currentTab === 'category') {
+                        displayCategories(currentCategoryView);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in loadCategories:', error);
+            }
+        }
+
+        function updateCategoryDropdown(type) {
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
+            const categoriesToShow = (type === 'รายรับ') ? incomeCategories : expenseCategories;
+            categoriesToShow.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.name;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        function switchCategoryView(type) {
+            currentCategoryView = type;
+            document.getElementById('income-cat-btn').classList.toggle('active', type === 'รายรับ');
+            document.getElementById('expense-cat-btn').classList.toggle('active', type === 'รายจ่าย');
+            displayCategories(type);
+        }
+
+        function displayCategories(type) {
+            const listEl = document.getElementById('category-list');
+            listEl.innerHTML = '';
+            const categories = (type === 'รายรับ') ? incomeCategories : expenseCategories;
+            if (categories.length === 0) {
+                listEl.innerHTML = `<div class="text-center" style="padding: 40px; color: #666;">ไม่มีหมวดหมู่${type}</div>`;
+            } else {
+                 categories.forEach(cat => {
+                    const item = document.createElement('div');
+                    item.className = 'category-list-item';
+                    item.innerHTML = `
+                        <span>${cat.name}</span>
+                        <div>
+                            <button class="btn btn-sm btn-edit" onclick="showEditCategoryForm('${cat.name}')">แก้ไข</button>
+                            <button class="btn btn-sm btn-delete" onclick="deleteCategory('${cat.name}')">ลบ</button>
+                        </div>
+                    `;
+                    listEl.appendChild(item);
+                });
+            }
+        }
+
+        function toggleAddCategoryForm() {
+            const form = document.getElementById('add-category-form');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            if (form.style.display === 'block') {
+                 document.getElementById('edit-category-old-name').value = '';
+                 document.getElementById('new-category-name').value = '';
+                 document.getElementById('new-category-name').focus();
+            }
+        }
+
+        function showEditCategoryForm(name) {
+            document.getElementById('edit-category-old-name').value = name;
+            document.getElementById('new-category-name').value = name;
+            document.getElementById('add-category-form').style.display = 'block';
+            document.getElementById('new-category-name').focus();
+        }
+
+        async function saveCategory() {
+            const newName = document.getElementById('new-category-name').value.trim();
+            const oldName = document.getElementById('edit-category-old-name').value;
+            if (!newName) {
+                Swal.fire({ icon: 'warning', title: 'กรุณาระบุชื่อหมวดหมู่' });
+                return;
+            }
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const result = oldName
+                    ? await runGAS('updateCategory', oldName, newName, currentCategoryView)
+                    : await runGAS('addCategory', newName, currentCategoryView);
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', timer: 1500, showConfirmButton: false });
+                    toggleAddCategoryForm();
+                    await loadCategories();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: result.message });
+                }
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
+            }
+        }
+
+        function deleteCategory(name) {
+            Swal.fire({
+                title: 'ยืนยันการลบ', text: `คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่ "${name}"?`, icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33',
+                cancelButtonText: 'ยกเลิก', confirmButtonText: 'ใช่, ลบเลย!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    try {
+                        const res = await runGAS('deleteCategory', name, currentCategoryView);
+                        if (res.success) {
+                            Swal.fire({ icon: 'success', title: 'ลบสำเร็จ!', timer: 1500, showConfirmButton: false });
+                            await loadCategories();
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'ลบไม่สำเร็จ', text: res.message });
+                        }
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
+                    }
+                }
+            });
+        }
+
+        // --- Charting and Utility Functions ---
+        function createCharts(transactions, year) {
+            try {
+                const { incomeByCategory, expenseByCategory, monthlyData } = processChartData(transactions);
+                createInteractivePieChart('incomeChartDiv', 'ไม่มีข้อมูลรายรับ', incomeByCategory, ['#11998e', '#38ef7d', '#4facfe', '#a8edea', '#84fab0', '#00c6fb']);
+                createInteractivePieChart('expenseChartDiv', 'ไม่มีข้อมูลรายจ่าย', expenseByCategory, ['#fc4a1a', '#f7b733', '#ff9a9e', '#fecfef', '#ffecd2', '#fcb69f']);
+                createInteractiveMonthlyChart(monthlyData, year);
+            } catch (error) {
+                console.error('Error creating charts:', error);
+            }
+        }
+
+        function processChartData(transactions) {
+            const incomeByCategory = {};
+            const expenseByCategory = {};
+            const monthlyData = {};
+            transactions.forEach(t => {
+                const amount = parseFloat(t.amount) || 0;
+                const category = t.category || 'ไม่ระบุ';
+                const date = new Date(t.date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (t.type === 'รายรับ') {
+                    incomeByCategory[category] = (incomeByCategory[category] || 0) + amount;
+                } else if (t.type === 'รายจ่าย') {
+                    expenseByCategory[category] = (expenseByCategory[category] || 0) + amount;
+                }
+                if (!monthlyData[monthKey]) monthlyData[monthKey] = { income: 0, expense: 0 };
+                monthlyData[monthKey][t.type === 'รายรับ' ? 'income' : 'expense'] += amount;
+            });
+            return { incomeByCategory, expenseByCategory, monthlyData };
+        }
+
+        function createInteractivePieChart(containerId, emptyText, data, colors) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const categories = Object.keys(data);
+
+            if (categories.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #666; padding: 20px 0;">${emptyText}</div>`;
+                return;
+            }
+
+            const total = Object.values(data).reduce((a, b) => a + b, 0);
+            const tooltip = document.getElementById('chart-tooltip');
+
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("viewBox", "0 0 100 100");
+            svg.style.width = "100%";
+            svg.style.height = "100%";
+            svg.style.maxWidth = "150px";
+
+            let startAngle = -90;
+
+            categories.forEach((category, index) => {
+                const amount = data[category];
+                const percentage = (amount / total) * 100;
+                const angle = (percentage / 100) * 360;
+
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("class", "pie-chart-slice");
+                const endAngle = startAngle + angle;
+
+                const x1 = 50 + 50 * Math.cos(Math.PI * startAngle / 180);
+                const y1 = 50 + 50 * Math.sin(Math.PI * startAngle / 180);
+                const x2 = 50 + 50 * Math.cos(Math.PI * endAngle / 180);
+                const y2 = 50 + 50 * Math.sin(Math.PI * endAngle / 180);
+
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                const d = `M50,50 L${x1},${y1} A50,50 0 ${largeArcFlag},1 ${x2},${y2} Z`;
+
+                path.setAttribute("d", d);
+                path.setAttribute("fill", colors[index % colors.length]);
+
+                const tooltipText = `${category}\n${formatCurrency(amount)} (${percentage.toFixed(1)}%)`;
+                path.dataset.tooltip = tooltipText;
+
+                path.addEventListener('mousemove', (e) => {
+                    tooltip.innerHTML = e.currentTarget.dataset.tooltip;
+                    tooltip.style.display = 'block';
+                    tooltip.style.opacity = 1;
+                    tooltip.style.left = `${e.clientX}px`;
+                    tooltip.style.top = `${e.clientY}px`;
+                });
+                path.addEventListener('mouseout', () => {
+                    tooltip.style.opacity = 0;
+                    setTimeout(() => tooltip.style.display = 'none', 200);
+                });
+
+                svg.appendChild(path);
+
+                // *** NEW: Add percentage text if slice is big enough ***
+                if (percentage > 7) {
+                    const midAngle = startAngle + angle / 2;
+                    const textX = 50 + 35 * Math.cos(Math.PI * midAngle / 180);
+                    const textY = 50 + 35 * Math.sin(Math.PI * midAngle / 180);
+
+                    const text = document.createElementNS(svgNS, "text");
+                    text.setAttribute("x", textX);
+                    text.setAttribute("y", textY);
+                    text.setAttribute("fill", "white");
+                    text.setAttribute("font-size", "8px");
+                    text.setAttribute("font-weight", "bold");
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("dominant-baseline", "middle");
+                    text.style.pointerEvents = "none";
+                    text.textContent = `${percentage.toFixed(0)}%`;
+                    svg.appendChild(text);
+                }
+
+                startAngle = endAngle;
+            });
+
+            container.appendChild(svg);
+        }
+
+        function createInteractiveMonthlyChart(monthlyData, year) {
+            const chartParentContainer = document.querySelector('.chart-container-full');
+            chartParentContainer.querySelector('h4').textContent = `รายรับ-รายจ่ายรายเดือน (ปี ${parseInt(year) + 543})`;
+            const container = document.getElementById('monthlyChartDiv');
+            container.innerHTML = '';
+            const tooltip = document.getElementById('chart-tooltip');
+
+            const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+            const fullYearData = monthNames.map((name, index) => ({
+                monthLabel: name,
+                income: monthlyData[`${year}-${String(index + 1).padStart(2, '0')}`]?.income || 0,
+                expense: monthlyData[`${year}-${String(index + 1).padStart(2, '0')}`]?.expense || 0,
+            }));
+
+            const maxAmount = Math.max(1, ...fullYearData.flatMap(d => [d.income, d.expense]));
+            if (maxAmount <= 1) {
+                container.innerHTML = '<div style="text-align: center; color: #666;">ไม่มีข้อมูลรายเดือน</div>';
+                return;
+            }
+
+            const chartBarsHtml = fullYearData.map(data => {
+                const incomeHeight = (data.income / maxAmount) * 180; // Adjusted height
+                const expenseHeight = (data.expense / maxAmount) * 180; // Adjusted height
+                const tooltipText = `เดือน ${data.monthLabel}\nรายรับ: ${formatCurrency(data.income)}\nรายจ่าย: ${formatCurrency(data.expense)}`;
+                return `
+                    <div class="monthly-bar-group" data-tooltip="${tooltipText}" style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; text-align: center; cursor: pointer;">
+                        <div style="display: flex; gap: 2px; align-items: end; height: 100%; pointer-events: none;">
+                            <div style="background: #11998e; width: 12px; height: ${incomeHeight}px; border-radius: 2px;"></div>
+                            <div style="background: #fc4a1a; width: 12px; height: ${expenseHeight}px; border-radius: 2px;"></div>
+                        </div>
+                        <div style="font-size: 11px; white-space: nowrap;">${data.monthLabel}</div>
+                    </div>`;
+            }).join('');
+
+            // *** REMOVED LEGEND ***
+            container.innerHTML = `<div style="display: flex; gap: 4px; align-items: end; height: 100%; width: 100%; padding: 20px 10px; border-bottom: 1px solid #eee;">${chartBarsHtml}</div>`;
+
+            container.querySelectorAll('.monthly-bar-group').forEach(bar => {
+                bar.addEventListener('mousemove', (e) => {
+                    tooltip.innerHTML = e.currentTarget.dataset.tooltip;
+                    tooltip.style.display = 'block';
+                    tooltip.style.opacity = 1;
+                    tooltip.style.left = `${e.clientX}px`;
+                    tooltip.style.top = `${e.clientY}px`;
+                });
+                bar.addEventListener('mouseout', () => {
+                    tooltip.style.opacity = 0;
+                    setTimeout(() => tooltip.style.display = 'none', 200);
+                });
+            });
+        }
+
+        function formatCurrency(amount) {
+            return '฿' + parseFloat(amount).toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+    </script>
 </body>
 </html>
