@@ -10,7 +10,7 @@ async function loadDashboard() {
     console.log(result);
 
     if (!result.success) {
-      document.body.innerHTML += `<p>โหลดข้อมูลไม่สำเร็จ</p>`;
+      document.body.innerHTML = `<h1>โหลดข้อมูลไม่สำเร็จ</h1>`;
       return;
     }
 
@@ -18,29 +18,57 @@ async function loadDashboard() {
     const transactions = result.data.transactions;
 
     let html = `
-      <h1>สรุปข้อมูล</h1>
 
-      <p>รายรับ: ${summary.totalIncome} บาท</p>
-      <p>รายจ่าย: ${summary.totalExpense} บาท</p>
-      <p>คงเหลือ: ${summary.netBalance} บาท</p>
+      <h1>ระบบรายรับรายจ่าย</h1>
 
-      <hr>
+      <div class="summary">
+
+        <div class="card">
+          <h3>รายรับ</h3>
+          <div class="amount">${summary.totalIncome} บาท</div>
+        </div>
+
+        <div class="card">
+          <h3>รายจ่าย</h3>
+          <div class="amount">${summary.totalExpense} บาท</div>
+        </div>
+
+        <div class="card">
+          <h3>คงเหลือ</h3>
+          <div class="amount">${summary.netBalance.toFixed(2)} บาท</div>
+        </div>
+
+      </div>
 
       <h2>รายการทั้งหมด</h2>
+
+      <div class="transactions">
     `;
 
-    transactions.forEach(item => {
+    transactions.reverse().forEach(item => {
+
+      const cls =
+        item.type === 'รายรับ'
+          ? 'income'
+          : 'expense';
 
       html += `
-        <div style="border:1px solid #ccc;padding:10px;margin:10px;">
-          <p>ประเภท: ${item.type}</p>
-          <p>รายการ: ${item.item}</p>
-          <p>หมวดหมู่: ${item.category}</p>
-          <p>จำนวนเงิน: ${item.amount} บาท</p>
+
+        <div class="item ${cls}">
+
+          <p><strong>ประเภท:</strong> ${item.type}</p>
+
+          <p><strong>รายการ:</strong> ${item.item}</p>
+
+          <p><strong>หมวดหมู่:</strong> ${item.category}</p>
+
+          <p class="amount">${item.amount} บาท</p>
+
         </div>
       `;
-
     });
+
+    html += `</div>`;
 
     document.body.innerHTML = html;
 
@@ -48,8 +76,8 @@ async function loadDashboard() {
 
     console.error(error);
 
-    document.body.innerHTML += `
-      <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+    document.body.innerHTML = `
+      <h1>เกิดข้อผิดพลาด</h1>
     `;
   }
 }
